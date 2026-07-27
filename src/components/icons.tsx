@@ -193,10 +193,3 @@ export const IconNote = (props: IconProps): JSX.Element => (
     <path d="M15 20v-5h5M8 9.5h8M8 13h4" />
   </svg>
 );
-
-export const IconAddCircle = (props: IconProps): JSX.Element => (
-  <svg {...base({ width: 20, height: 20, ...props })}>
-    <circle cx="12" cy="12" r="8.5" />
-    <path d="M12 8.5v7M8.5 12h7" />
-  </svg>
-);

@@ -5,7 +5,7 @@ import { db, type FeedingType } from "../db";
 import { useSettings } from "../hooks/useSettings";
 import { ageInMonths, dayRange, fromDateInput, hhmm, timeAgoShort } from "../utils/time";
 import { FEED_META, FeedTypeSegment, Empty, Toast, useToast } from "../components/ui";
-import { IconAddCircle, IconChevronRight } from "../components/icons";
+import { IconChevronRight } from "../components/icons";
 
 export default function Dashboard(): JSX.Element {
   const { babyName, birthday } = useSettings();
@@ -82,25 +82,9 @@ export default function Dashboard(): JSX.Element {
       </div>
 
       <div className="card">
-        <div className="row between" style={{ alignItems: "flex-start", marginBottom: 14 }}>
-          <div>
-            <div className="card-title">快捷记录</div>
-            <div className="card-sub">又到开饭时间啦，记一下吧</div>
-          </div>
-          <span
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: "50%",
-              background: "rgba(255, 157, 187, 0.2)",
-              color: "var(--primary)",
-              display: "grid",
-              placeItems: "center",
-              flexShrink: 0,
-            }}
-          >
-            <IconAddCircle />
-          </span>
+        <div style={{ marginBottom: 14 }}>
+          <div className="card-title">快捷记录</div>
+          <div className="card-sub">又到开饭时间啦，记一下吧</div>
         </div>
         <div style={{ marginBottom: 14 }}>
           <FeedTypeSegment value={type} onChange={setType} />
