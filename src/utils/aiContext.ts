@@ -53,24 +53,31 @@ export async function buildBabyContext(
     parts.push("近 7 天暂无喂养记录。");
   }
 
-  // 最新生长
-  const growth = await db.growth.orderBy("time").reverse().first();
-  if (growth) {
-    const seg: string[] = [];
-    const m = Number.isFinite(birthdayTs) ? ageInMonths(birthdayTs, growth.time) : NaN;
-    if (growth.weightKg != null) {
-      const p = Number.isFinite(m)
-        ? `（${assessPercentile("weight", m, growth.weightKg)}）`
-        : "";
-      seg.push(`体重 ${Math.round(growth.weightKg * 1000)}g${p}`);
-    }
-    if (growth.heightCm != null) {
-      const p = Number.isFinite(m)
-        ? `（${assessPercentile("length", m, growth.heightCm)}）`
-        : "";
-      seg.push(`身长 ${growth.heightCm}cm${p}`);
-    }
-    parts.push(`最新生长测量（${monthDay(growth.time)}）：${seg.join("，")}。`);
+  // 生长测量历史（近 20 条，按时间正序），让 AI 能看到增长轨迹而非单点
+  const growthAll = await db.growth.orderBy("time").toArray();
+  const growthRecent = growthAll.slice(-20);
+  if (growthRecent.length) {
+    const lines = growthRecent.map((g) => {
+      const m = Number.isFinite(birthdayTs) ? ageInMonths(birthdayTs, g.time) : NaN;
+      const seg: string[] = [];
+      if (g.weightKg != null) {
+        const p = Number.isFinite(m)
+          ? `（${assessPercentile("weight", m, g.weightKg)}）`
+          : "";
+        seg.push(`体重 ${Math.round(g.weightKg * 1000)}g${p}`);
+      }
+      if (g.heightCm != null) {
+        const p = Number.isFinite(m)
+          ? `（${assessPercentile("length", m, g.heightCm)}）`
+          : "";
+        seg.push(`身长 ${g.heightCm}cm${p}`);
+      }
+      const age = Number.isFinite(m) ? `，月龄 ${m.toFixed(1)}` : "";
+      return `- ${monthDay(g.time)}${age}：${seg.join("，")}`;
+    });
+    parts.push(
+      `生长测量记录（共 ${growthAll.length} 条，以下为近 ${growthRecent.length} 条，按时间正序）：\n${lines.join("\n")}`
+    );
   } else {
     parts.push("暂无生长测量记录。");
   }
