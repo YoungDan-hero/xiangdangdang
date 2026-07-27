@@ -1,0 +1,16 @@
+node_modules/
+dist/
+*.log
+
+# Capacitor / Android 构建产物
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/.idea/
+android/app/release/
+*.apk
+*.keystore
+!android/app/debug.keystore
+
+.DS_Store
