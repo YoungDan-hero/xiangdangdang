@@ -1,7 +1,7 @@
 import type { GrowthRecord } from "../db";
 import { DeepSeekError, chatOnce } from "../deepseek";
 import { assessPercentile } from "./growth";
-import { ageInMonths, monthDay } from "./time";
+import { ageInMonths, fromDateInput, monthDay } from "./time";
 
 export interface GrowthAssessment {
   /** 0-100 */
@@ -70,7 +70,8 @@ export async function generateGrowthAssessment({
   birthday,
   records,
 }: GenerateOptions): Promise<GrowthAssessment> {
-  const birthdayTs = new Date(birthday).getTime();
+  // 按本地时区解析生日，避免与本地零点录入的记录相差 8 小时产生负月龄
+  const birthdayTs = fromDateInput(birthday);
   const now = Date.now();
 
   const lines = records.slice(-20).map((r) => {

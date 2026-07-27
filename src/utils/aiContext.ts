@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { ageInMonths, monthDay } from "./time";
+import { ageInMonths, fromDateInput, monthDay } from "./time";
 import { assessPercentile } from "./growth";
 import type { FeedingType } from "../db";
 
@@ -19,7 +19,7 @@ export async function buildBabyContext(
   birthday: string
 ): Promise<string> {
   const now = Date.now();
-  const birthdayTs = birthday ? new Date(birthday).getTime() : NaN;
+  const birthdayTs = birthday ? fromDateInput(birthday) : NaN;
   const parts: string[] = [];
 
   parts.push(`宝宝昵称：${babyName}（女宝）。`);
