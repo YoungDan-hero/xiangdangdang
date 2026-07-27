@@ -25,7 +25,7 @@ export interface GrowthRecord {
   note?: string;
 }
 
-export interface SettingRecord {
+interface SettingRecord {
   key: string;
   value: string;
 }
@@ -44,12 +44,7 @@ db.version(1).stores({
 
 export { db };
 
-/** 设置项读写（AI Key、宝宝生日、昵称等） */
-export async function getSetting(key: string): Promise<string | undefined> {
-  const row = await db.settings.get(key);
-  return row?.value;
-}
-
+/** 设置项写入（AI Key、宝宝生日、昵称等） */
 export async function setSetting(key: string, value: string): Promise<void> {
   await db.settings.put({ key, value });
 }

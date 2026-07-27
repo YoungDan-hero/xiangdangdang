@@ -28,18 +28,6 @@ export function fromDateInput(value: string): number {
   return new Date(y, m - 1, d).getTime();
 }
 
-/** 相对时间，如「3小时前」 */
-export function timeAgo(ts: number, now = Date.now()): string {
-  const diff = Math.max(0, now - ts);
-  const min = Math.floor(diff / 60000);
-  if (min < 1) return "刚刚";
-  if (min < 60) return `${min} 分钟前`;
-  const hour = Math.floor(min / 60);
-  if (hour < 24) return `${hour} 小时${min % 60 ? ` ${min % 60} 分` : ""}前`;
-  const day = Math.floor(hour / 24);
-  return `${day} 天前`;
-}
-
 /** 紧凑相对时间，用于窄卡片，如「4时18分」 */
 export function timeAgoShort(ts: number, now = Date.now()): string {
   const diff = Math.max(0, now - ts);

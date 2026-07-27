@@ -13,7 +13,7 @@ export const FEED_META: Record<
 
 const FEED_ORDER: FeedingType[] = ["formula", "breast", "mixed", "solid"];
 
-export interface SegmentOption<T extends string> {
+interface SegmentOption<T extends string> {
   value: T;
   label: string;
   emoji?: string;

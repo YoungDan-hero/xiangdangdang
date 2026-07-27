@@ -32,8 +32,7 @@ export function whoAt(metric: GrowthMetricKey, month: number): GrowthPercentileP
 /**
  * 估算某测量值在同龄女童中的百分位区间描述。
  * 返回人类可读的评估文案，用于看板与 AI 上下文。
- */
-/**
+ *
  * 按 WHO 标准给出价值中立的评估：
  * P3~P97（约 ±2SD）为正常范围，超出上下限都属异常信号，
  * 「偏上」不代表更好——体重高于正常范围意味着超重风险。
@@ -51,5 +50,4 @@ export function assessPercentile(
   return "高于正常范围";
 }
 
-export { WHO_GIRLS };
 export type { GrowthMetricKey };

@@ -1,7 +1,7 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { db, SETTING_KEYS } from "../db";
 
-export interface BabySettings {
+interface BabySettings {
   babyName: string;
   birthday: string; // yyyy-MM-dd
   deepseekKey: string;
