@@ -1,4 +1,4 @@
-import { NavLink, Navigate, Route, Routes } from "react-router-dom";
+import { NavLink, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Feeding from "./pages/Feeding";
 import Growth from "./pages/Growth";
@@ -9,6 +9,7 @@ import {
   IconChart,
   IconGear,
   IconHome,
+  IconPerson,
   IconSpark,
 } from "./components/icons";
 
@@ -20,9 +21,26 @@ const NAV = [
   { to: "/settings", Icon: IconGear, label: "设置" },
 ] as const;
 
+function AppBar(): JSX.Element {
+  const { pathname } = useLocation();
+  const title = NAV.find((n) => pathname.startsWith(n.to))?.label ?? "响当当";
+  return (
+    <header className="appbar">
+      <div className="appbar-inner">
+        <span className="appbar-title">{title}</span>
+        <NavLink to="/settings" className="appbar-avatar" aria-label="设置">
+          <IconPerson />
+        </NavLink>
+      </div>
+    </header>
+  );
+}
+
 export default function App(): JSX.Element {
   return (
     <div className="app">
+      <AppBar />
+
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />

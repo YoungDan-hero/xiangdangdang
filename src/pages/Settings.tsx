@@ -2,6 +2,15 @@ import { useEffect, useState } from "react";
 import { db, setSetting, SETTING_KEYS } from "../db";
 import { useSettings } from "../hooks/useSettings";
 import { Toast, useToast } from "../components/ui";
+import {
+  IconArchive,
+  IconCheckCircle,
+  IconDownload,
+  IconExternal,
+  IconEye,
+  IconEyeOff,
+  IconShield,
+} from "../components/icons";
 
 export default function Settings(): JSX.Element {
   const settings = useSettings();
@@ -48,72 +57,88 @@ export default function Settings(): JSX.Element {
 
   return (
     <div className="page">
-      <div className="page-title">设置</div>
-
+      <div className="section-title">宝宝信息</div>
       <div className="card">
-        <span className="card-title">宝宝信息</span>
-        <div style={{ marginTop: 12 }}>
-          <label className="field">
-            <span>昵称</span>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="响响" />
-          </label>
-          <label className="field">
-            <span>出生日期（用于计算月龄与生长百分位）</span>
-            <input
-              type="date"
-              value={birthday}
-              onChange={(e) => setBirthday(e.target.value)}
-            />
-          </label>
-        </div>
+        <label className="field">
+          <span>昵称</span>
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="响响" />
+        </label>
+        <label className="field" style={{ marginBottom: 0 }}>
+          <span>出生日期（用于计算月龄与生长百分位）</span>
+          <input
+            type="date"
+            value={birthday}
+            onChange={(e) => setBirthday(e.target.value)}
+          />
+        </label>
       </div>
 
+      <div className="section-title">AI 助手</div>
       <div className="card">
-        <span className="card-title">AI 助手</span>
-        <div className="muted small" style={{ margin: "6px 0 12px" }}>
-          填写 DeepSeek API Key 后即可使用育儿助手。Key 仅保存在本机，不会上传。
+        <div className="info-row">
+          <span className="iicon blue">
+            <IconShield />
+          </span>
+          <p>您的 API Key 仅保存在本地设备中，不会上传至任何服务器，确保您的数据绝对安全。</p>
         </div>
-        <label className="field">
-          <span>DeepSeek API Key</span>
-          <div className="row" style={{ gap: 8 }}>
+        <label className="field" style={{ marginBottom: 0 }}>
+          <span
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            DeepSeek API Key
+            <a
+              className="link"
+              href="https://platform.deepseek.com/api_keys"
+              target="_blank"
+              rel="noreferrer"
+              style={{ fontSize: 13 }}
+            >
+              获取密钥 <IconExternal />
+            </a>
+          </span>
+          <div className="input-wrap icon-only">
             <input
-              className="grow"
               type={showKey ? "text" : "password"}
               value={key}
               placeholder="sk-..."
               onChange={(e) => setKey(e.target.value)}
             />
-            <button className="btn ghost mini" onClick={() => setShowKey((v) => !v)}>
-              {showKey ? "隐藏" : "显示"}
+            <button
+              type="button"
+              className="inset-icon"
+              aria-label={showKey ? "隐藏密钥" : "显示密钥"}
+              onClick={() => setShowKey((v) => !v)}
+            >
+              {showKey ? <IconEye /> : <IconEyeOff />}
             </button>
           </div>
         </label>
-        <a
-          className="small"
-          href="https://platform.deepseek.com/api_keys"
-          target="_blank"
-          rel="noreferrer"
-          style={{ color: "var(--pink-deep)" }}
-        >
-          → 前往 DeepSeek 获取 API Key
-        </a>
       </div>
 
-      <button className="btn block" onClick={save} style={{ marginBottom: 14 }}>
-        保存设置
-      </button>
-
+      <div className="section-title">数据管理</div>
       <div className="card">
-        <span className="card-title">数据管理</span>
-        <div className="muted small" style={{ margin: "6px 0 12px" }}>
-          所有记录都保存在手机本地。建议定期导出备份。
+        <div className="info-row">
+          <span className="iicon green">
+            <IconArchive />
+          </span>
+          <p>所有记录数据均保存在本地。建议定期导出备份，以防数据丢失。</p>
         </div>
-        <button className="btn ghost block" onClick={exportData}>
+        <button className="btn soft block" onClick={exportData}>
+          <IconDownload />
           导出数据备份（JSON）
         </button>
       </div>
 
-      <div className="empty small">响当当 · 为响响记录每一天 🎀</div>
+      <button className="btn pill-soft block" onClick={save} style={{ marginTop: 8 }}>
+        <IconCheckCircle />
+        保存设置
+      </button>
+
+      <div className="footer-note">响当当 · 为响响记录每一天 🎀</div>
 
       <Toast text={toast} />
     </div>

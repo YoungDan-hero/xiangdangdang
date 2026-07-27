@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useSettings } from "../hooks/useSettings";
 import { streamChat, DeepSeekError, type ChatMessage } from "../deepseek";
 import { buildBabyContext, SYSTEM_PROMPT } from "../utils/aiContext";
+import { IconChevronRight, IconSend, IconStop } from "../components/icons";
 
 interface UiMessage {
   role: "user" | "assistant";
@@ -86,22 +87,28 @@ export default function Assistant(): JSX.Element {
 
   return (
     <div className="page" ref={scrollRef} style={{ display: "flex", flexDirection: "column" }}>
-      <div className="page-title">育儿助手 <small>DeepSeek · 懂响响的数据</small></div>
-
       {messages.length === 0 && (
-        <div className="card">
-          <div style={{ marginBottom: 10 }}>
-            👋 我是响当当育儿助手，能看到响响的喂养与生长记录。试试问我：
+        <>
+          <div className="welcome">
+            <div className="face">👋</div>
+            <h2>你好呀</h2>
+            <p>我是你的育儿助手，基于{babyName}的记录为你解答</p>
           </div>
-          <div className="row wrap" style={{ gap: 8 }}>
+          <div>
             {SUGGESTIONS.map((s) => (
-              <button key={s} className="chip" onClick={() => send(s)}>
-                {s}
+              <button key={s} className="suggest" onClick={() => send(s)}>
+                <span>{s}</span>
+                <span className="arrow">
+                  <IconChevronRight />
+                </span>
               </button>
             ))}
           </div>
           {!deepseekKey && (
-            <div className="small" style={{ marginTop: 12, color: "var(--danger)" }}>
+            <div
+              className="small"
+              style={{ marginTop: 12, color: "var(--error)", textAlign: "center" }}
+            >
               ⚠️ 尚未配置 DeepSeek API Key，
               <span
                 style={{ textDecoration: "underline" }}
@@ -111,7 +118,7 @@ export default function Assistant(): JSX.Element {
               </span>
             </div>
           )}
-        </div>
+        </>
       )}
 
       <div className="chat">
@@ -121,27 +128,37 @@ export default function Assistant(): JSX.Element {
           </div>
         ))}
       </div>
-      <div style={{ height: 60 }} />
+      <div style={{ height: 64 }} />
 
       <div className="chat-input">
-        <input
-          className="grow"
-          placeholder="问点关于响响的事…"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") send(input);
-          }}
-        />
-        {busy ? (
-          <button className="btn ghost" onClick={() => abortRef.current?.abort()}>
-            停止
-          </button>
-        ) : (
-          <button className="btn" onClick={() => send(input)} disabled={!input.trim()}>
-            发送
-          </button>
-        )}
+        <div className="chat-input-box">
+          <input
+            placeholder={`问点关于${babyName}的事…`}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") send(input);
+            }}
+          />
+          {busy ? (
+            <button
+              className="send-btn"
+              aria-label="停止"
+              onClick={() => abortRef.current?.abort()}
+            >
+              <IconStop />
+            </button>
+          ) : (
+            <button
+              className="send-btn"
+              aria-label="发送"
+              onClick={() => send(input)}
+              disabled={!input.trim()}
+            >
+              <IconSend />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

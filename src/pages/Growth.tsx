@@ -12,6 +12,14 @@ import {
   type GrowthAssessment,
 } from "../utils/assessment";
 import { Empty, Segment, Toast, useToast } from "../components/ui";
+import {
+  IconCalendar,
+  IconPlus,
+  IconRuler,
+  IconScale,
+  IconSpark,
+  IconTrash,
+} from "../components/icons";
 
 interface MetricMeta {
   key: GrowthMetricKey;
@@ -30,6 +38,10 @@ const METRICS: MetricMeta[] = [
 /** 展示值统一收敛浮点误差 */
 const toDisplay = (stored: number, scale: number): number =>
   Number((stored * scale).toFixed(scale === 1 ? 1 : 0));
+
+/** WHO 区间文案 → 状态胶囊色调 */
+const pillTone = (text: string): "ok" | "warn" | "bad" =>
+  text === "正常" ? "ok" : text.includes("范围") ? "bad" : "warn";
 
 const BANDS: {
   key: "p3" | "p15" | "p50" | "p85" | "p97";
@@ -65,7 +77,10 @@ export default function Growth(): JSX.Element {
   const records = useLiveQuery(() => db.growth.orderBy("time").toArray(), []);
   const meta = METRICS.find((m) => m.key === metric)!;
   const hasBirthday = Boolean(birthday);
-  const birthdayTs = hasBirthday ? new Date(birthday).getTime() : NaN;
+  // 生日必须按本地时区解析：new Date("YYYY-MM-DD") 是 UTC 零点，
+  // 与本地零点录入的测量记录相差 8 小时，会把出生当天的月龄算成负数，
+  // 导致 WHO 图（横轴 min:0）裁掉第一个点。
+  const birthdayTs = hasBirthday ? fromDateInput(birthday) : NaN;
 
   // ---------- AI 发育评估 ----------
   const [aiLoading, setAiLoading] = useState(false);
@@ -166,7 +181,7 @@ export default function Growth(): JSX.Element {
         type: "value",
         scale: true,
         axisLabel: { fontSize: 10 },
-        splitLine: { lineStyle: { color: "#ffe3ec" } },
+        splitLine: { lineStyle: { color: "#f4e5e7" } },
       },
       dataZoom: [
         { type: "inside", xAxisIndex: 0 },
@@ -180,9 +195,9 @@ export default function Growth(): JSX.Element {
           smooth: true,
           symbol: "circle",
           symbolSize: 8,
-          itemStyle: { color: "#f56991" },
-          lineStyle: { color: "#f56991", width: 2.5 },
-          areaStyle: { color: "rgba(245, 105, 145, 0.08)" },
+          itemStyle: { color: "#944460", borderColor: "#fff", borderWidth: 2 },
+          lineStyle: { color: "#944460", width: 2.5 },
+          areaStyle: { color: "rgba(148, 68, 96, 0.06)" },
         },
       ],
     };
@@ -251,7 +266,7 @@ export default function Growth(): JSX.Element {
         type: "value",
         scale: true,
         axisLabel: { fontSize: 10 },
-        splitLine: { lineStyle: { color: "#ffe3ec" } },
+        splitLine: { lineStyle: { color: "#f4e5e7" } },
       },
       series: [
         ...bandSeries,
@@ -262,14 +277,14 @@ export default function Growth(): JSX.Element {
           smooth: false,
           symbol: "circle",
           symbolSize: 8,
-          itemStyle: { color: "#f56991" },
-          lineStyle: { color: "#f56991", width: 2.5 },
+          itemStyle: { color: "#944460", borderColor: "#fff", borderWidth: 2 },
+          lineStyle: { color: "#944460", width: 2.5 },
           endLabel: {
             show: true,
             formatter: "响响",
             fontSize: 10,
             fontWeight: 700 as const,
-            color: "#f56991",
+            color: "#944460",
             distance: 4,
           },
           z: 5,
@@ -331,10 +346,13 @@ export default function Growth(): JSX.Element {
 
   return (
     <div className="page">
-      <div className="page-title">生长曲线 <small>对照 WHO 女童标准</small></div>
+      <div className="page-title">
+        <h1>生长曲线</h1>
+        <p>对照 WHO 女童标准</p>
+      </div>
 
       {!hasBirthday && (
-        <div className="card" style={{ background: "var(--fill)" }}>
+        <div className="card" style={{ background: "var(--surface-low)" }}>
           <div className="small">
             📌 请先到「设置」填写响响的出生日期，曲线才能按月龄对照百分位。
           </div>
@@ -358,18 +376,24 @@ export default function Growth(): JSX.Element {
           ) : assessment ? (
             <>
               <div className="row between">
-                <div>
-                  <div className="ai-title">AI 发育评估</div>
-                  <div className="ai-level">{assessment.level}</div>
-                </div>
-                <div className="ai-score">
-                  {assessment.score}
-                  <span className="ai-score-unit">分</span>
-                </div>
+                <span className="ai-chip">AI 发育评估</span>
+                <span style={{ opacity: 0.7, display: "grid", placeItems: "center" }}>
+                  <IconSpark width={20} height={20} />
+                </span>
+              </div>
+              <div className="ai-level">{assessment.level}</div>
+              <div className="ai-score">
+                {assessment.score}
+                <span className="ai-score-unit">分</span>
               </div>
               <div className="ai-summary">{assessment.summary}</div>
-              {assessment.tips && <div className="ai-tips">💡 {assessment.tips}</div>}
-              <div className="row between" style={{ marginTop: 12 }}>
+              {assessment.tips && (
+                <div className="ai-tips">
+                  <span>💡</span>
+                  <span>{assessment.tips}</span>
+                </div>
+              )}
+              <div className="row between" style={{ marginTop: 14 }}>
                 <span className="ai-meta">
                   {monthDay(assessment.generatedAt)}生成 · 仅供参考，不替代医生诊断
                 </span>
@@ -387,7 +411,7 @@ export default function Growth(): JSX.Element {
         </div>
       )}
 
-      <div style={{ marginBottom: 12 }}>
+      <div style={{ marginBottom: 16 }}>
         <Segment
           ariaLabel="生长指标"
           value={metric}
@@ -400,25 +424,31 @@ export default function Growth(): JSX.Element {
         <div className="card">
           <div className="row between">
             <div>
-              <div className="muted small">最新{meta.label}（{latestAssess.when}）</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: "var(--pink-deep)" }}>
-                {latestAssess.value} {meta.unit}
+              <div className="item-sub" style={{ marginBottom: 4 }}>
+                最新{meta.label}（{latestAssess.when}）
+              </div>
+              <div style={{ fontSize: 28, fontWeight: 800 }}>
+                {latestAssess.value}
+                <span
+                  className="muted"
+                  style={{ fontSize: 15, fontWeight: 400, marginLeft: 4 }}
+                >
+                  {meta.unit}
+                </span>
               </div>
             </div>
-            <div className="chip" style={{ background: "var(--pink-soft)" }}>
+            <span className={`pill ${pillTone(latestAssess.text)}`}>
+              <span className="dot" />
               {latestAssess.text}
-            </div>
+            </span>
           </div>
         </div>
       )}
 
       <div className="card">
         <div className="row between" style={{ marginBottom: 10 }}>
-          <span className="card-title">
-            {meta.label}曲线
-            <span className="muted small" style={{ fontWeight: 600 }}>
-              （{meta.unit}）
-            </span>
+          <span style={{ fontSize: 15, fontWeight: 700 }}>
+            {meta.label}曲线（{meta.unit}）
           </span>
           <Segment
             mini
@@ -447,16 +477,12 @@ export default function Growth(): JSX.Element {
         )}
       </div>
 
-      <button
-        className="fab"
-        aria-label="记录测量"
-        onClick={() => setDraft(emptyDraft())}
-      >
-        ＋
+      <button className="fab" aria-label="记录测量" onClick={() => setDraft(emptyDraft())}>
+        <IconPlus />
       </button>
 
       <div className="card">
-        <span className="card-title">{meta.label}记录</span>
+        <span style={{ fontSize: 15, fontWeight: 700 }}>{meta.label}记录</span>
         <div style={{ marginTop: 4 }}>
           {metricRecords.length === 0 && (
             <Empty emoji="📏" text={`还没有${meta.label}记录`} />
@@ -475,10 +501,10 @@ export default function Growth(): JSX.Element {
                 })
               }
             >
-              <div className="grow">
-                <div style={{ fontWeight: 600 }}>{monthDay(r.time)}</div>
+              <div className="grow muted" style={{ fontSize: 15 }}>
+                {monthDay(r.time)}
               </div>
-              <div style={{ fontWeight: 700, color: "var(--primary-deep)" }}>
+              <div style={{ fontSize: 16, fontWeight: 600 }}>
                 {toDisplay(r[meta.field] as number, meta.scale)} {meta.unit}
               </div>
             </div>
@@ -490,56 +516,79 @@ export default function Growth(): JSX.Element {
         <div className="sheet-mask" onClick={() => setDraft(null)}>
           <div className="sheet" onClick={(e) => e.stopPropagation()}>
             <div className="sheet-handle" />
-            <div className="row between" style={{ marginBottom: 14 }}>
-              <strong style={{ fontSize: 17 }}>
-                {draft.id != null ? "编辑测量" : "记录测量"}
-              </strong>
-              <button className="btn ghost mini" onClick={() => setDraft(null)}>
-                关闭
-              </button>
+            <h2 className="sheet-title">
+              {draft.id != null ? "编辑测量" : "记录生长数据"}
+            </h2>
+
+            <div className="input-tile">
+              <span className="ticon">
+                <IconCalendar />
+              </span>
+              <div className="tbody">
+                <label>测量日期</label>
+                <input
+                  type="date"
+                  value={toDateInput(draft.time)}
+                  onChange={(e) =>
+                    setDraft({ ...draft, time: fromDateInput(e.target.value) })
+                  }
+                />
+              </div>
             </div>
-            <label className="field">
-              <span>测量日期</span>
-              <input
-                type="date"
-                value={toDateInput(draft.time)}
-                onChange={(e) => setDraft({ ...draft, time: fromDateInput(e.target.value) })}
-              />
-            </label>
-            <label className="field">
-              <span>体重（g）</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                step="any"
-                placeholder="如 5300"
-                value={draft.weight}
-                onChange={(e) => setDraft({ ...draft, weight: e.target.value })}
-              />
-            </label>
-            <label className="field">
-              <span>身长（cm）</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                step="any"
-                placeholder="如 58.5"
-                value={draft.height}
-                onChange={(e) => setDraft({ ...draft, height: e.target.value })}
-              />
-            </label>
-            <div className="row" style={{ gap: 10, marginTop: 6 }}>
+
+            <div className="input-tile">
+              <span className="ticon">
+                <IconScale />
+              </span>
+              <div className="tbody">
+                <label>体重 (g)</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="any"
+                  placeholder="输入体重..."
+                  value={draft.weight}
+                  onChange={(e) => setDraft({ ...draft, weight: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="input-tile">
+              <span className="ticon blue">
+                <IconRuler />
+              </span>
+              <div className="tbody">
+                <label>身长 (cm)</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="any"
+                  placeholder="选填..."
+                  value={draft.height}
+                  onChange={(e) => setDraft({ ...draft, height: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="row" style={{ gap: 12, marginTop: 8 }}>
               {draft.id != null && (
                 <button
-                  className="btn ghost"
-                  style={{ color: "var(--danger)" }}
+                  className="btn danger-square"
+                  aria-label="删除"
                   onClick={() => remove(draft.id!)}
                 >
-                  删除
+                  <IconTrash />
                 </button>
               )}
-              <button className="btn grow" onClick={save}>
-                保存
+              <button
+                className="btn ghost"
+                style={{ flex: 1, height: 56 }}
+                onClick={() => setDraft(null)}
+              >
+                取消
+              </button>
+              <button className="btn" style={{ flex: 2, height: 56 }} onClick={save}>
+                保存记录
               </button>
             </div>
           </div>

@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
+import { NavLink } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db, type FeedingType } from "../db";
 import { useSettings } from "../hooks/useSettings";
 import { ageInMonths, dayRange, hhmm, timeAgoShort } from "../utils/time";
 import { FEED_META, FeedTypeSegment, Empty, Toast, useToast } from "../components/ui";
+import { IconAddCircle, IconChevronRight } from "../components/icons";
 
 export default function Dashboard(): JSX.Element {
   const { babyName, birthday } = useSettings();
@@ -31,7 +33,7 @@ export default function Dashboard(): JSX.Element {
 
   const ageText = useMemo(() => {
     if (!birthday) return "设置生日后显示月龄";
-    const m = ageInMonths(new Date(birthday).getTime(), Date.now());
+    const m = ageInMonths(fromDateInput(birthday), Date.now());
     const months = Math.floor(m);
     const days = Math.floor((m - months) * 30.4375);
     return `${months} 个月 ${days} 天`;
@@ -56,44 +58,55 @@ export default function Dashboard(): JSX.Element {
             <div className="hero-name">你好，{babyName}</div>
             <div className="hero-age">{ageText}</div>
           </div>
-          <div className="hero-avatar">🎀</div>
+          <div className="hero-avatar">
+            👶
+            <span className="bow">🎀</span>
+          </div>
         </div>
         <div className="hero-stats">
           <div className="hero-stat">
-            <div className="num">{stats.count}</div>
             <div className="label">今日喂养</div>
+            <div className="num">{stats.count}</div>
           </div>
           <div className="hero-stat">
-            <div className="num">{stats.totalMl || "—"}</div>
             <div className="label">奶量 (ml)</div>
+            <div className="num">{stats.totalMl || "—"}</div>
           </div>
           <div className="hero-stat">
-            <div className="num" style={{ fontSize: 17, whiteSpace: "nowrap" }}>
+            <div className="label">距上次喂养</div>
+            <div className="num" style={{ fontSize: 19 }}>
               {stats.last ? timeAgoShort(stats.last.time) : "—"}
             </div>
-            <div className="label">距上次喂养</div>
           </div>
         </div>
       </div>
 
       <div className="card">
-        <div className="row between" style={{ marginBottom: 12 }}>
-          <span className="card-title">快捷记录</span>
-          {lastAmount != null && (
-            <button
-              className="btn ghost mini"
-              onClick={() => setAmount(String(lastAmount))}
-            >
-              上次 {lastAmount}ml
-            </button>
-          )}
+        <div className="row between" style={{ alignItems: "flex-start", marginBottom: 14 }}>
+          <div>
+            <div className="card-title">快捷记录</div>
+            <div className="card-sub">又到开饭时间啦，记一下吧</div>
+          </div>
+          <span
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: "50%",
+              background: "rgba(255, 157, 187, 0.2)",
+              color: "var(--primary)",
+              display: "grid",
+              placeItems: "center",
+              flexShrink: 0,
+            }}
+          >
+            <IconAddCircle />
+          </span>
         </div>
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 14 }}>
           <FeedTypeSegment value={type} onChange={setType} />
         </div>
-        <div className="row" style={{ gap: 8 }}>
+        <div className={`input-wrap ${lastAmount == null ? "icon-only" : ""}`} style={{ marginBottom: 12 }}>
           <input
-            className="grow"
             type="number"
             inputMode="decimal"
             step="any"
@@ -101,31 +114,47 @@ export default function Dashboard(): JSX.Element {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
           />
-          <button className="btn" onClick={quickSave}>
-            记一笔
-          </button>
+          {lastAmount != null && (
+            <button className="inset-btn" onClick={() => setAmount(String(lastAmount))}>
+              上次 {lastAmount}ml
+            </button>
+          )}
         </div>
+        <button className="btn block" onClick={quickSave}>
+          记一笔
+        </button>
       </div>
 
       <div className="card">
-        <span className="card-title">今日记录</span>
-        <div style={{ marginTop: 8 }}>
-          {todays && todays.length === 0 && (
-            <Empty emoji="🌤️" text="今天还没有记录，喂养后点上面记一笔吧" />
-          )}
-          {(todays ?? []).map((f) => (
-            <div key={f.id} className="list-item">
-              <div className="badge">{FEED_META[f.type].emoji}</div>
-              <div className="grow">
-                <div style={{ fontWeight: 600 }}>{FEED_META[f.type].label}</div>
-                <div className="muted small">{hhmm(f.time)}</div>
-              </div>
-              <div style={{ fontWeight: 700, color: "var(--pink-deep)" }}>
-                {f.amountMl ? `${f.amountMl}ml` : f.durationMin ? `${f.durationMin}分钟` : ""}
-              </div>
-            </div>
-          ))}
+        <div className="row between" style={{ marginBottom: 6 }}>
+          <span className="card-title">今日记录</span>
+          <NavLink to="/feeding" className="link">
+            查看全部 <IconChevronRight />
+          </NavLink>
         </div>
+        {todays && todays.length === 0 && (
+          <Empty emoji="🌤️" text="今天还没有记录，喂养后点上面记一笔吧" />
+        )}
+        {(todays ?? []).map((f) => (
+          <div key={f.id} className="list-item">
+            <div className="badge">{FEED_META[f.type].emoji}</div>
+            <div className="grow">
+              <div className="item-name">{FEED_META[f.type].label}</div>
+              <div className="item-sub">{hhmm(f.time)}</div>
+            </div>
+            {f.amountMl ? (
+              <div className="item-val">
+                {f.amountMl}
+                <small>ml</small>
+              </div>
+            ) : f.durationMin ? (
+              <div className="item-val blue">
+                {f.durationMin}
+                <small>min</small>
+              </div>
+            ) : null}
+          </div>
+        ))}
       </div>
 
       <Toast text={toast} />
